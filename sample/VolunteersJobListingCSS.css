@@ -56,7 +56,7 @@ tr:hover {
 	margin-block-end: 0px;
 }
 
-/* Exception for the details on the form;  */
+/* Exception for the details on the form; currently enjoy the spacing on the form itself  */
 /* .cssForm tr{
 } */
 
@@ -78,8 +78,16 @@ tr:hover {
 }
 
 /* Where the address is; needs space after this to the signup list itself */
-.cssJobLocationAddress {
 
+.cssJobLocationAddress::before{
+	content: "Location Information";
+	display: block;
+	font-size: x-large;
+	margin-top: 40px;
+}
+
+.cssJobLocationAddress{
+	margin-bottom: 40px;
 }
 
 
