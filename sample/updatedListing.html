@@ -1,0 +1,229 @@
+<html><head><script src="/static/111213/js/perf/stub.js" type="text/javascript"></script><link class="component" href="/faces/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/table.xcss/DATB/eAEz2rRkV-jyGdIAEoQD8g__" rel="stylesheet" type="text/css"><script src="/static/111213/js/functions.js" type="text/javascript"></script><script src="/jslibrary/1543986924218/sfdc/main.js" type="text/javascript"></script><script src="/jslibrary/jslabels/1560278634000/en_US.js" type="text/javascript"></script><script src="/static/111213/desktop/desktopAjax.js" type="text/javascript"></script><script src="/static/111213/js/picklist4.js" type="text/javascript"></script><script src="/resource/1559783996000/gw_volunteers__jQueryFiles/js/jquery-3.2.1.min.js" type="text/javascript"></script><script src="/resource/1559783996000/gw_volunteers__jQueryFiles/js/jquery-ui-1.12.1.custom.min.js" type="text/javascript"></script><script src="/jslibrary/1539958554218/sfdc/VFState.js" type="text/javascript"></script><link class="user" href="/resource/1559783996000/gw_volunteers__jQueryFiles/css/ui-lightness/jquery-ui-1.12.1.custom.min.css" rel="stylesheet" type="text/css"><link class="user" href="/servlet/servlet.FileDownload?file=0151U000001Sib5" rel="stylesheet" type="text/css"><script>(function(UITheme) {
+    UITheme.getUITheme = function() { 
+        return UserContext.uiTheme;
+    };
+}(window.UITheme = window.UITheme || {}));</script>
+
+
+<link rel="stylesheet" href="./VolunteersJobListingCSS.css">    
+
+
+</head><body> 
+
+<script type="text/javascript">
+    var j$ = jQuery.noConflict();
+
+    j$(function() {
+        j$("#dlgSignUp").dialog({modal: true, autoOpen: false, draggable: true, width: 400, resizeable: true });
+        j$("#dlgThankYou").dialog({modal: true, autoOpen: false, draggable: true, width: 400, resizeable: true });
+
+        // if there are errors, display the signup dialog.
+        // we detect this by seeing if Salesforce inserted the error style on any item.        
+        if (j$(".error").length > 0 || '' != '') {
+            j$('#dlgSignUp').dialog('open');
+        } else if ('' != '') { // display thank you!
+            j$('#dlgThankYou').dialog('open');      
+        } 
+         
+    });
+    
+    function OpenSignUpDlg(JobId, ShiftId, JobName, ShiftName) {
+        j$('input[name$=txtJobId]').val(JobId);                         
+        j$('input[name$=txtShiftId]').val(ShiftId);                         
+        j$('span[id$="txtJobDisplayName"]').text(JobName); 
+        j$('span[id$="txtShiftDisplayName"]').text(ShiftName); 
+
+        // The dialog position should be related to the Shift.
+        var signUpButton;
+        if (ShiftId == null) {
+            signUpButton = j$('#' + JobId);
+        }
+        else {
+            signUpButton = j$('#' + ShiftId);
+        }
+        
+        var top = signUpButton.position().top + signUpButton.height() + ((signUpButton.outerHeight() - signUpButton.height()));
+        j$('#dlgSignUp').dialog({
+            position: {
+                my: "center top+" + top,
+                at: "center top",
+                of: document,
+                collision: "fit"
+            }
+        });
+
+        j$('#dlgSignUp').dialog('open');
+
+        return false;
+    };
+    
+    function MyDateFormat(dt, strDateFormat) {
+        var strDt = strDateFormat;
+        strDt = strDt.replace('EEEE', '');  // server formatting supports this.  backward compat doesn't have to support it.
+        strDt = strDt.replace('MM', ((dt.getMonth() < 9) ? ('0' + (dt.getMonth() + 1)) : (dt.getMonth() + 1)));
+        strDt = strDt.replace('M', (dt.getMonth() + 1));
+        strDt = strDt.replace('dd', ((dt.getDate() < 10) ? ('0' + dt.getDate()) : dt.getDate()));
+        strDt = strDt.replace('d', (dt.getDate()));
+        strDt = strDt.replace('yyyy', (dt.getFullYear()));
+        strDt = strDt.replace('yy', (dt.getFullYear().toString().substring(2,4)));
+        return strDt;
+    }
+    
+    function MyTimeFormat(dt, strTimeFormat) {
+        var strTm = strTimeFormat;
+        var is12hrFormat = strTimeFormat.indexOf('h') >= 0;
+        var includeAMPM = strTimeFormat.indexOf('tt') >= 0;
+        var intHours = dt.getHours();
+        var intMinutes = dt.getMinutes();
+        var strAM = (intHours >= 12) ? 'pm' : 'am';
+        if (!includeAMPM) strAM = '';
+        if (intHours > 12 && is12hrFormat) intHours = intHours - 12;   
+        if (is12hrFormat && intHours == 0) intHours = 12;   
+        strTm = strTm.replace('hh', intHours < 10 ? ('0' + intHours) : intHours);
+        strTm = strTm.replace('h', intHours);
+        strTm = strTm.replace('HH', intHours < 10 ? ('0' + intHours) : intHours);
+        strTm = strTm.replace('H', intHours);
+        strTm = strTm.replace('mm', (intMinutes == 0) ? '00' : (intMinutes < 10 ? ('0' + intMinutes) : intMinutes));
+        strTm = strTm.replace('m', (intMinutes == 0) ? '00' : intMinutes);
+        strTm = strTm.replace('tt', strAM);     
+        return strTm;   
+    }
+
+    // Starting in version 3.0, date time formatting is done in Apex on the server, but we still use this
+    // for backward compatibility, if the System Note field hasn't been made visible on the Site's Guest User Profile,
+    // which is the field we temporarily store the server datetime formatted string to use.
+    function JobShiftDateTimeString(dt, duration) {
+        var dtStart = new Date(dt);        
+
+        // strDateFormat is a page parameter (set by the controller) that allows some simple date formatting.
+        var strStartDate = MyDateFormat(dtStart, 'EEEE M/d/yyyy');
+                
+        // strTimeFormat is a page parameter (set by the controller) that allows some simple time formatting.
+        var strStartTime = MyTimeFormat(dtStart, 'h:mm tt');
+        
+        var dtEnd = new Date(dt);
+        dtEnd.setMinutes(dtEnd.getMinutes() + (duration * 60));
+        var strEndTime = MyTimeFormat(dtEnd, 'h:mm tt');
+        return strStartDate + ' ' + strStartTime + ' - ' + strEndTime;
+    }      
+      
+</script>
+        <div class="" id="jobContainer"><span id="j_id0:rptJobs:0:j_id11"><p><span class="cssJobName">Up Your Alley 2019</span></p></span><span id="j_id0:rptJobs:0:j_id15"><p><script> if(!window.sfdcPage) { window.sfdcPage = new ApexDetailPage(); }UserContext.initialize({"ampm":["AM","PM"],"isAccessibleMode":false,"salesforceURL":"https://gapafoundation.secure.force.com?refURL=http%3A%2F%2Fgapafoundation.secure.force.com%2FGW_Volunteers__VolunteersJobListingFS","dateFormat":"M/d/yyyy","language":"en_US","locale":"en_US","dateTimeFormat":"M/d/yyyy h:mm a","isGlobalEventBusPilotEnabled":false,"labelLastModified":"1560278634000","today":"6/12/2019 6:44 PM","userPreferences":[{"index":112,"name":"HideInlineEditSplash","value":false},{"index":114,"name":"OverrideTaskSendNotification","value":false},{"index":115,"name":"DefaultTaskSendNotification","value":false},{"index":119,"name":"HideUserLayoutStdFieldInfo","value":false},{"index":116,"name":"HideRPPWarning","value":false},{"index":87,"name":"HideInlineSchedulingSplash","value":false},{"index":88,"name":"HideCRUCNotification","value":false},{"index":89,"name":"HideNewPLESplash","value":false},{"index":90,"name":"HideNewPLEWarnIE6","value":false},{"index":122,"name":"HideOverrideSharingMessage","value":false},{"index":91,"name":"HideProfileILEWarn","value":false},{"index":93,"name":"HideProfileElvVideo","value":false},{"index":97,"name":"ShowPicklistEditSplash","value":false},{"index":92,"name":"HideDataCategorySplash","value":false},{"index":128,"name":"ShowDealView","value":false},{"index":129,"name":"HideDealViewGuidedTour","value":false},{"index":132,"name":"HideKnowledgeFirstTimeSetupMsg","value":false},{"index":104,"name":"DefaultOffEntityPermsMsg","value":false},{"index":135,"name":"HideNewCsnSplash","value":false},{"index":101,"name":"HideBrowserWarning","value":false},{"index":139,"name":"HideDashboardBuilderGuidedTour","value":false},{"index":140,"name":"HideSchedulingGuidedTour","value":false},{"index":180,"name":"HideReportBuilderGuidedTour","value":false},{"index":183,"name":"HideAssociationQueueCallout","value":false},{"index":194,"name":"HideQTEBanner","value":false},{"index":270,"name":"HideIDEGuidedTour","value":false},{"index":282,"name":"HideQueryToolGuidedTour","value":false},{"index":196,"name":"HideCSIGuidedTour","value":false},{"index":271,"name":"HideFewmetGuidedTour","value":false},{"index":272,"name":"HideEditorGuidedTour","value":false},{"index":205,"name":"HideApexTestGuidedTour","value":false},{"index":206,"name":"HideSetupProfileHeaderTour","value":false},{"index":207,"name":"HideSetupProfileObjectsAndTabsTour","value":false},{"index":213,"name":"DefaultOffArticleTypeEntityPermMsg","value":false},{"index":214,"name":"HideSelfInfluenceGetStarted","value":false},{"index":215,"name":"HideOtherInfluenceGetStarted","value":false},{"index":216,"name":"HideFeedToggleGuidedTour","value":false},{"index":268,"name":"ShowChatterTab178GuidedTour","value":false},{"index":275,"name":"HidePeopleTabDeprecationMsg","value":false},{"index":276,"name":"HideGroupTabDeprecationMsg","value":false},{"index":224,"name":"HideUnifiedSearchGuidedTour","value":false},{"index":226,"name":"ShowDevContextMenu","value":false},{"index":227,"name":"HideWhatRecommenderForActivityQueues","value":false},{"index":228,"name":"HideLiveAgentFirstTimeSetupMsg","value":false},{"index":232,"name":"HideGroupAllowsGuestsMsgOnMemberWidget","value":false},{"index":233,"name":"HideGroupAllowsGuestsMsg","value":false},{"index":234,"name":"HideWhatAreGuestsMsg","value":false},{"index":235,"name":"HideNowAllowGuestsMsg","value":false},{"index":236,"name":"HideSocialAccountsAndContactsGuidedTour","value":false},{"index":237,"name":"HideAnalyticsHomeGuidedTour","value":false},{"index":238,"name":"ShowQuickCreateGuidedTour","value":false},{"index":245,"name":"HideFilePageGuidedTour","value":false},{"index":250,"name":"HideForecastingGuidedTour","value":false},{"index":251,"name":"HideBucketFieldGuide","value":false},{"index":263,"name":"HideSmartSearchCallOut","value":false},{"index":273,"name":"ShowForecastingQuotaAttainment","value":false},{"index":280,"name":"HideForecastingQuotaColumn","value":false},{"index":301,"name":"HideManyWhoGuidedTour","value":false},{"index":298,"name":"HideFileSyncBannerMsg","value":false},{"index":299,"name":"HideTestConsoleGuidedTour","value":false},{"index":302,"name":"HideManyWhoInlineEditTip","value":false},{"index":303,"name":"HideSetupV2WelcomeMessage","value":false},{"index":312,"name":"ForecastingShowQuantity","value":false},{"index":313,"name":"HideDataImporterIntroMsg","value":false},{"index":314,"name":"HideEnvironmentHubLightbox","value":false},{"index":316,"name":"HideSetupV2GuidedTour","value":false},{"index":317,"name":"HideFileSyncMobileDownloadDialog","value":false},{"index":322,"name":"HideEnhancedProfileHelpBubble","value":false},{"index":328,"name":"ForecastingHideZeroRows","value":false},{"index":330,"name":"HideEmbeddedComponentsFeatureCallout","value":false},{"index":341,"name":"HideDedupeMatchResultCallout","value":false},{"index":340,"name":"HideS1BrowserUI","value":false},{"index":346,"name":"HideS1Banner","value":false},{"index":358,"name":"HideEmailVerificationAlert","value":false},{"index":354,"name":"HideLearningPathModal","value":false},{"index":359,"name":"HideAtMentionsHelpBubble","value":false},{"index":368,"name":"LightningExperiencePreferred","value":true},{"index":373,"name":"PreviewLightning","value":false}],"networkId":"","uiTheme":"Theme3","uiSkin":"Theme3","userName":"volunteers@gapafoundation.force.com","userId":"0051U000004o71S","isCurrentlySysAdminSU":false,"renderMode":"RETRO","startOfWeek":"1","vfDomainPattern":"gapafoundation--(?:[^.]+).visualforce.com","auraDomain":"gapafoundation.lightning.force.com","orgPreferences":[{"index":257,"name":"TabOrganizer","value":true},{"index":113,"name":"GroupTasks","value":true}],"isDefaultNetwork":true,"timeFormat":"h:mm a"});
+</script><span id="j_id0:rptJobs:0:j_id17"></span></p><table class="htmlDetailElementTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div class="sfdc_richtext" id="j_id0:rptJobs:0:j_id17j_id0:rptJobs:0:j_id17_00N1U00000ItmbO_div"><p>GAPA Foundation has been selected to beverage vend at Up Your Alley on July 28. We would love to have you join us!</p><p><br></p><p>Please note, GAPA Foundation may cap the amount of volunteers represented by non-GAPA Foundation organizations. Furthermore, all volunteers must follow directions by Beverage Captains, including but not limited to taking breaks and shift dismissal. Net proceeds for GAPA Foundation will benefit such programs like Student Scholarship and Community Grants.</p><p><br></p><p>We will have food for our volunteers. If you have any dietary restrictions, please note them on the sign-up form.</p></div></td></tr>
+</tbody></table><script>j_id0__rptJobs__0__j_id17 = window.onload; window.onload=function() { if (j_id0__rptJobs__0__j_id17!= null) j_id0__rptJobs__0__j_id17();};</script></span><p></p><span id="j_id0:rptJobs:0:j_id23">
+            <p class="cssJobLocationAddress"><span id="j_id0:rptJobs:0:j_id25">Dorey Alley &amp; Folsom Street</span><br><span id="j_id0:rptJobs:0:j_id27">San Francisco</span>,&nbsp;<span id="j_id0:rptJobs:0:j_id29">CA</span>&nbsp;&nbsp;<span id="j_id0:rptJobs:0:j_id31">94107</span>            
+            </p></span><span id="j_id0:rptJobs:0:j_id35">
+            <p><span id="j_id0:rptJobs:0:j_id37"></span></p><table class="htmlDetailElementTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div class="sfdc_richtext" id="j_id0:rptJobs:0:j_id37j_id0:rptJobs:0:j_id37_00N1U00000ItmbS_div"><p>GAPA Foundation's booth will be located at the corners of STREET and STREET.</p></div></td></tr>
+</tbody></table><script>j_id0__rptJobs__0__j_id37 = window.onload; window.onload=function() { if (j_id0__rptJobs__0__j_id37!= null) j_id0__rptJobs__0__j_id37();};</script></span>
+            <p></p><table id="j_id0:rptJobs:0:rptShifts" border="0" cellpadding="0" cellspacing="0"><colgroup span="3"></colgroup><tbody id="j_id0:rptJobs:0:rptShifts:tb"><tr><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:0:j_id47" colspan="1" style="text-align:center;"><span id="j_id0:rptJobs:0:rptShifts:0:j_id48">
+                    <a href="SignUp" id="a0V1U000001lIcxUAE" onclick="                         var x = 'Sunday 7/28/2019 12:00 PM - 4:00 PM';                            if (x == '') x = JobShiftDateTimeString('Sun Jul 28 19:00:00 GMT 2019', '4.00');                         OpenSignUpDlg('a0T1U000001YbiJUAS', 'a0V1U000001lIcxUAE', 'Up Your Alley 2019', x);                         return false;">sign up</a></span>
+                &nbsp;&nbsp;&nbsp;</td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:0:j_id53" colspan="1">
+                <div id="txtShiftStartDateTime">
+                    <script>
+                        var strDT = 'Sunday 7/28/2019 12:00 PM - 4:00 PM';
+                        if (strDT == '') strDT = JobShiftDateTimeString('Sun Jul 28 19:00:00 GMT 2019', '4.00'); 
+                        document.write(strDT);
+                    </script>Sunday 7/28/2019 12:00 PM - 4:00 PM&nbsp;&nbsp;&nbsp;
+                </div></td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:0:j_id59" colspan="1"><span id="j_id0:rptJobs:0:rptShifts:0:j_id60">Afternoon</span></td></tr><tr><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:1:j_id47" colspan="1" style="text-align:center;"><span id="j_id0:rptJobs:0:rptShifts:1:j_id48">
+                    <a href="SignUp" id="a0V1U000001lIcyUAE" onclick="                         var x = 'Sunday 7/28/2019 2:00 PM - 6:00 PM';                            if (x == '') x = JobShiftDateTimeString('Sun Jul 28 21:00:00 GMT 2019', '4.00');                         OpenSignUpDlg('a0T1U000001YbiJUAS', 'a0V1U000001lIcyUAE', 'Up Your Alley 2019', x);                         return false;">sign up</a></span>
+                &nbsp;&nbsp;&nbsp;</td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:1:j_id53" colspan="1">
+                <div id="txtShiftStartDateTime">
+                    <script>
+                        var strDT = 'Sunday 7/28/2019 2:00 PM - 6:00 PM';
+                        if (strDT == '') strDT = JobShiftDateTimeString('Sun Jul 28 21:00:00 GMT 2019', '4.00'); 
+                        document.write(strDT);
+                    </script>Sunday 7/28/2019 2:00 PM - 6:00 PM&nbsp;&nbsp;&nbsp;
+                </div></td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:1:j_id59" colspan="1"><span id="j_id0:rptJobs:0:rptShifts:1:j_id60">Mid-Afternoon</span></td></tr><tr><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:2:j_id47" colspan="1" style="text-align:center;"><span id="j_id0:rptJobs:0:rptShifts:2:j_id48">
+                    <a href="SignUp" id="a0V1U000001lId2UAE" onclick="                         var x = 'Sunday 7/28/2019 4:00 PM - 6:00 PM';                            if (x == '') x = JobShiftDateTimeString('Sun Jul 28 23:00:00 GMT 2019', '2.00');                         OpenSignUpDlg('a0T1U000001YbiJUAS', 'a0V1U000001lId2UAE', 'Up Your Alley 2019', x);                         return false;">sign up</a></span>
+                &nbsp;&nbsp;&nbsp;</td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:2:j_id53" colspan="1">
+                <div id="txtShiftStartDateTime">
+                    <script>
+                        var strDT = 'Sunday 7/28/2019 4:00 PM - 6:00 PM';
+                        if (strDT == '') strDT = JobShiftDateTimeString('Sun Jul 28 23:00:00 GMT 2019', '2.00'); 
+                        document.write(strDT);
+                    </script>Sunday 7/28/2019 4:00 PM - 6:00 PM&nbsp;&nbsp;&nbsp;
+                </div></td><td class="cssJobShiftSignup " id="j_id0:rptJobs:0:rptShifts:2:j_id59" colspan="1"><span id="j_id0:rptJobs:0:rptShifts:2:j_id60">Closing</span></td></tr></tbody></table>
+        <br>
+        <br><span id="j_id0:rptJobs:0:j_id62"><hr></span>
+        </div>
+
+
+ 
+
+
+<script type="text/javascript">Sfdc.onReady(function(){
+	SfdcApp && SfdcApp.Visualforce && SfdcApp.Visualforce.VSManager && SfdcApp.Visualforce.VSManager.vfPrepareForms(["j_id0:frmSignUp"]);
+
+});</script><div tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-draggable ui-resizable" aria-describedby="dlgSignUp" aria-labelledby="ui-id-1" style="display: none; position: absolute;"><div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle"><span id="ui-id-1" class="ui-dialog-title">Volunteer Sign Up</span><button type="button" class="ui-button ui-corner-all ui-widget ui-button-icon-only ui-dialog-titlebar-close" title="Close"><span class="ui-button-icon ui-icon ui-icon-closethick"></span><span class="ui-button-icon-space"> </span>Close</button></div><div id="dlgSignUp" class="ui-dialog-content ui-widget-content">
+<form id="j_id0:frmSignUp" name="j_id0:frmSignUp" method="post" action="/GW_Volunteers__VolunteersJobListingFS" class="cssForm" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id0:frmSignUp" value="j_id0:frmSignUp">
+<span id="j_id0:frmSignUp:panelSignUp"> 
+            <table columns="2">
+                
+                <tbody><tr>
+                    <td class="cssLabelsColumn"><label for="j_id0:frmSignUp:txtFirstName">
+First Name*</label></td>
+                    <td class="cssInputFieldsColumn"><div class="requiredInput"><div class="requiredBlock"></div><input class="cssInputFields" id="j_id0:frmSignUp:txtFirstName" maxlength="40" name="j_id0:frmSignUp:txtFirstName" size="20" type="text"></div></td>
+                </tr>
+                <tr>    
+                    <td class="cssLabelsColumn"><label for="j_id0:frmSignUp:txtLastName">
+Last Name*</label></td>
+                    <td class="cssInputFieldsColumn"><div class="requiredInput"><div class="requiredBlock"></div><input class="cssInputFields" id="j_id0:frmSignUp:txtLastName" maxlength="80" name="j_id0:frmSignUp:txtLastName" size="20" type="text"></div></td>
+                </tr>
+                <tr>            
+                    <td class="cssLabelsColumn"><label for="j_id0:frmSignUp:txtEmail">
+Email*</label></td>
+                    <td class="cssInputFieldsColumn"><div class="requiredInput"><div class="requiredBlock"></div><input class="cssInputFields" id="j_id0:frmSignUp:txtEmail" maxlength="80" name="j_id0:frmSignUp:txtEmail" size="20" type="text"></div></td>
+                </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Mobile Phone*</label></td>
+                        <td class="cssInputFieldsColumn"><div class="requiredInput"><div class="requiredBlock"></div><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:0:j_id83" maxlength="40" name="j_id0:frmSignUp:j_id79:0:j_id83" onblur="formatPhone(this);" onkeydown="formatPhoneOnEnter(this, event);" size="20" type="text"></div></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Volunteer Organization</label></td>
+                        <td class="cssInputFieldsColumn"><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:1:j_id83" maxlength="255" name="j_id0:frmSignUp:j_id79:1:j_id83" size="20" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Mailing Street</label></td>
+                        <td class="cssInputFieldsColumn"><textarea class="cssInputFields" id="j_id0:frmSignUp:j_id79:2:j_id83" maxlength="255" name="j_id0:frmSignUp:j_id79:2:j_id83" onchange="handleTextAreaElementChangeWithByteCheck('j_id0:frmSignUp:j_id79:2:j_id83', 255, 765, 'remaining', 'over limit', false);" onclick="handleTextAreaElementChangeWithByteCheck('j_id0:frmSignUp:j_id79:2:j_id83', 255, 765, 'remaining', 'over limit', false);" onkeydown="handleTextAreaElementChangeWithByteCheck('j_id0:frmSignUp:j_id79:2:j_id83', 255, 765, 'remaining', 'over limit', false);" onkeyup="handleTextAreaElementChangeWithByteCheck('j_id0:frmSignUp:j_id79:2:j_id83', 255, 765, 'remaining', 'over limit', false);" onmousedown="handleTextAreaElementChangeWithByteCheck('j_id0:frmSignUp:j_id79:2:j_id83', 255, 765, 'remaining', 'over limit', false);" type="text" wrap="soft"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Mailing City</label></td>
+                        <td class="cssInputFieldsColumn"><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:3:j_id83" maxlength="40" name="j_id0:frmSignUp:j_id79:3:j_id83" size="20" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Mailing State/Province</label></td>
+                        <td class="cssInputFieldsColumn"><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:4:j_id83" maxlength="80" name="j_id0:frmSignUp:j_id79:4:j_id83" size="20" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Mailing Zip/Postal Code</label></td>
+                        <td class="cssInputFieldsColumn"><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:5:j_id83" maxlength="20" name="j_id0:frmSignUp:j_id79:5:j_id83" size="20" type="text"></td>
+                    </tr>
+                    <tr>
+                        <td class="cssLabelsColumn"><label>
+Dietary Restrictions</label></td>
+                        <td class="cssInputFieldsColumn"><input class="cssInputFields" id="j_id0:frmSignUp:j_id79:6:j_id83" maxlength="255" name="j_id0:frmSignUp:j_id79:6:j_id83" size="20" type="text"></td>
+                    </tr>
+                
+                
+                <tr>            
+                    <td class="cssLabelsColumn"><label for="j_id0:frmSignUp:txtFileUpload">
+</label></td>
+                    <td class="cssInputFieldsColumn"></td>
+                </tr>                       
+            </tbody></table>       
+            <p><span id="j_id0:frmSignUp:txtJobDisplayName" style="border-style:none; background-color:transparent; width:100%;" class="cssSignupDisplayName"></span><br><span id="j_id0:frmSignUp:txtShiftDisplayName" style="border-style:none; background-color:transparent; width:100%;" class="cssSignupDisplayName"></span><br>
+            </p><input id="j_id0:frmSignUp:btnSignUp" type="submit" name="j_id0:frmSignUp:btnSignUp" value="Sign Up" onclick="                     j$('input[name$=btnSignUp]').attr('disabled','disabled');                      j$('input[name$=txtContactIdSignUp]').val('');                      j$('input[name$=txtVHIdSignUp]').val('');                     VolunteerShiftSignUp();                     return false;" class="cssButton btn"><input type="submit" name="j_id0:frmSignUp:j_id103" value="Cancel" onclick="j$('#dlgSignUp').dialog('close');" class="cssButton btn"><span id="j_id0:frmSignUp:statusSignUp"><span id="j_id0:frmSignUp:statusSignUp.start" style="color:green; font-style:italic; display: none">  Saving...</span><span id="j_id0:frmSignUp:statusSignUp.stop" style="color:black;"></span></span></span>
+<script type="text/javascript" language="Javascript">function dpf(f) {var adp = f.adp;if (adp != null) {for (var i = 0;i < adp.length;i++) {adp[i].parentNode.removeChild(adp[i]);}}};function apf(f, pvp) {var adp = new Array();f.adp = adp;var ps = pvp.split(',');for (var i = 0,ii = 0;i < ps.length;i++,ii++) {var p = document.createElement("input");p.type = "hidden";p.name = ps[i];p.value = ps[i + 1];f.appendChild(p);adp[ii] = p;i += 1;}};function jsfcljs(f, pvp, t) {apf(f, pvp);var ft = f.target;if (t) {f.target = t;}f.submit();f.target = ft;dpf(f);};</script>
+<script>function VolunteerShiftSignUp() { SfdcApp.Visualforce.VSManager.vfPrepareForms(["j_id0:frmSignUp"]); if(typeof jsfcljs == 'function'){jsfcljs(document.forms['j_id0:frmSignUp'],'j_id0:frmSignUp:j_id104,j_id0:frmSignUp:j_id104','');}return false }</script><script>function ClearVolunteerHoursIdSignUp() { SfdcApp.Visualforce.VSManager.vfPrepareForms(["j_id0:frmSignUp"]); if(typeof jsfcljs == 'function'){jsfcljs(document.forms['j_id0:frmSignUp'],'j_id0:frmSignUp:j_id105,j_id0:frmSignUp:j_id105','');}return false }</script><input id="j_id0:frmSignUp:txtJobId" type="hidden" name="j_id0:frmSignUp:txtJobId"><input id="j_id0:frmSignUp:txtShiftId" type="hidden" name="j_id0:frmSignUp:txtShiftId"><br><input id="j_id0:frmSignUp:txtContactIdSignUp" type="hidden" name="j_id0:frmSignUp:txtContactIdSignUp"><input id="j_id0:frmSignUp:txtVHIdSignUp" type="hidden" name="j_id0:frmSignUp:txtVHIdSignUp"><div id="j_id0:frmSignUp:j_id108"></div>
+</form><span id="ajax-view-state-page-container" style="display: none"><span id="ajax-view-state" style="display: none"><input type="hidden" id="com.salesforce.visualforce.ViewState" name="com.salesforce.visualforce.ViewState" value="i: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"><input type="hidden" id="com.salesforce.visualforce.ViewStateVersion" name="com.salesforce.visualforce.ViewStateVersion" value="201906111824170027"><input type="hidden" id="com.salesforce.visualforce.ViewStateMAC" name="com.salesforce.visualforce.ViewStateMAC" value="AGV5SnViMjVqWlNJNklqQkxhRFZOY1hkeE9VbFFOelkwWkMxa2FVSlZjUzFCWWxGMlkxaDJSVGQyT1c5NFMwOXFaM1pRU1RoY2RUQXdNMlFpTENKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUlzSW10cFpDSTZJbnRjSW5SY0lqcGNJakF3UkRGVk1EQXdNREF3ZWxoeWVGd2lMRndpZGx3aU9sd2lNREpITVZVd01EQXdNREJuZVRGNVhDSXNYQ0poWENJNlhDSjJabk5wWjI1cGJtZHJaWGxjSWl4Y0luVmNJanBjSWpBd05URlZNREF3TURBMGJ6Y3hVMXdpZlNJc0ltTnlhWFFpT2xzaWFXRjBJbDBzSW1saGRDSTZNVFUyTURNNU1ESTNNREF6T0N3aVpYaHdJam93ZlE9PS4uMlN6bE5QVkFBSlV4b1R1YzVjdFJaclRidkpMRlVjYW5zZlhLblpubEdCUT0="></span></span>  
+</div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div><div tabindex="-1" role="dialog" class="ui-dialog ui-corner-all ui-widget ui-widget-content ui-front ui-draggable ui-resizable" aria-describedby="dlgThankYou" aria-labelledby="ui-id-2" style="display: none; position: absolute;"><div class="ui-dialog-titlebar ui-corner-all ui-widget-header ui-helper-clearfix ui-draggable-handle"><span id="ui-id-2" class="ui-dialog-title">Volunteer Sign Up</span><button type="button" class="ui-button ui-corner-all ui-widget ui-button-icon-only ui-dialog-titlebar-close" title="Close"><span class="ui-button-icon ui-icon ui-icon-closethick"></span><span class="ui-button-icon-space"> </span>Close</button></div><div id="dlgThankYou" class="ui-dialog-content ui-widget-content">
+            <p class="cssThankYou">Thank you for signing up to volunteer.</p>
+            <input class="cssButton btn" onclick="j$('#dlgThankYou').dialog('close'); return false;" type="button" value="Close">
+</div><div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div></div></body></html>
