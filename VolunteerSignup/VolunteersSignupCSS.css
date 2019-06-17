@@ -1,0 +1,120 @@
+/*-------------------------------------------------------------------- 
+	SAMPLE CSS that gives a reasonable form layout 
+-----------------------------------------------------------------------*/
+
+.cssForm {
+	background-color: transparent;
+}
+
+.cssLabelsColumn {
+	width: 150px;
+	vertical-align: top;
+	font-weight: bold;
+	font-size: .8em;
+	text-align: right;	
+	vertical-align: center;
+	
+}
+
+.cssInputFieldsColumn {
+	vertical-align: top;
+}
+
+.cssInputFields {
+}
+
+.cssTextArea { 
+	width:300px; 
+}
+
+
+.cssForm > table {
+    border-spacing: 0px 0px;
+}
+
+:root {
+    --main-color: #f2c121;
+    --main-color-active: #e2b00b;
+    --background-color: #FAFAFA;
+    --background-color-active: rgb(214, 214, 214);
+}
+
+body {
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
+    background-color: var(--background-color);
+}
+
+.errorMsg{
+    font-size: x-small;
+    color: red;
+}
+
+td.cssInputFieldsColumn {
+    padding: 5px 10px;
+}
+
+td.cssLabelsColumn {
+    padding: 5px 10px;
+}
+
+tr {
+    transition: .5s;
+}
+
+tr:hover {
+    background-color: var(--background-color-active);
+}
+
+a > img {
+}
+
+.cssInputFieldsColumn > input:not(.cssInputFields) {
+    text-decoration: none;
+    background-color: var(--main-color);
+    border-radius: 1px;
+    height: 3em;
+    padding: 9px 18px;
+    margin: 5px;
+    transition: .5s;
+	color: white;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+}
+
+.cssInputFieldsColumn > input:not(.cssInputFields):hover {
+    background-color: var(--main-color-active);
+    text-decoration: none;
+}
+
+/*=======================================================================
+    SAMPLE UGLY CSS for the Volunteers Signup page that while ugly,
+	makes it clear what you can visually control.
+	Comment out the CSS above, and remove the trailing comment
+	on this CSS to see some ugly stuff!
+
+.cssForm {
+	background-color: Gainsboro;
+}
+
+.cssLabelsColumn {
+	color: DarkBlue;
+	width: 150px;
+	vertical-align: top;
+	font-family: Century Gothic, sans-serif;
+	font-weight: bold;	
+}
+
+.cssInputFieldsColumn {
+	background-color: LightBlue;
+}
+
+.cssInputFields {
+	color: red;
+	background-color: LightYellow;
+	font-family: Georgia, Serif;
+	border-style: groove;
+	border-color: DodgerBlue;
+
+}
+
+===================================================================*/
