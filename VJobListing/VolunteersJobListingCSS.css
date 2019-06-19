@@ -199,6 +199,33 @@ input.cssJobShiftSignup:hover {
     text-decoration: none;
     }
 
+/* Signup swithced using Google's Developer Console. The classes provided here may not work well in some scenarios */
+.ui-dialog.ui-corner-all.ui-widget.ui-widget-content.ui-front.ui-draggable.ui-resizable {
+    border-radius:  0;
+    padding:  0px;
+}
+
+.ui-dialog-titlebar.ui-corner-all.ui-widget-header.ui-helper-clearfix.ui-draggable-handle {
+    border-radius:  0px;
+    margin:  0px;
+    background: var(--main-color);
+    border:  none;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.ui-resizable-handle.ui-resizable-n {
+    height: 0px!important;
+    padding:  0px;
+}
+
+button.ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-close {
+    right: .6em;
+}
+
+
+
+
 /*=======================================================================
 
     SAMPLE UGLY CSS for the Volunteers Signup page that while ugly,
