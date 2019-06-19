@@ -4,7 +4,7 @@
 
 :root {
 	--main-color: #f2c121;
-	--main-color-active: #e2b00b;
+	--main-color-active: #c4980a;
 	--background-color: #FAFAFA;
 	--background-color-active: rgb(214, 214, 214);
 }
@@ -40,6 +40,25 @@ tr {
 }
 tr:hover {
     background-color: var(--background-color-active);
+}
+
+/* Input when there are no shifts */
+input.cssJobShiftSignup {
+    text-decoration: none;
+    background-color: var(--main-color);
+    border-radius: 1px;
+    height: 3em;
+    padding: 9px 18px;
+    margin: 5px;
+    transition: .5s;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border:  0px;
+}
+
+input.cssJobShiftSignup:hover {
+    background-color:  var(--main-color-active);
 }
 
 /* Exception for the details to not have a hover nor height; */
