@@ -224,6 +224,10 @@ button.ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-
 }
 
 
+span.dateFormat {
+	display: none;
+}
+
 
 
 /*=======================================================================
